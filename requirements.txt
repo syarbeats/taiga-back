@@ -190,7 +190,7 @@ rudder-sdk-python==1.0.0b1
     # via -r requirements.in
 sampledata==0.3.7
     # via django-sampledatahelper
-scikit-image==0.19.3
+#scikit-image==0.19.3
     # via psd-tools
 scipy==1.10.0
     # via

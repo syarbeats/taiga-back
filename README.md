@@ -12,6 +12,140 @@ Currently, we have authored three main documentation hubs:
 - **[Documentation](https://docs.taiga.io/)**: If you need to install Taiga on your own server, this is the place to find some guides.
 - **[Taiga Resources](https://community.taiga.io/)**: This page is intended to be the support reference page for the users.
 
+## Running Taiga
+
+### Using Docker (recommended)
+
+The easiest way to run Taiga is using Docker and Docker Compose:
+
+```bash
+docker-compose up
+```
+
+This will start all the required services (PostgreSQL, RabbitMQ, and Taiga backend).
+
+### Without Docker
+
+If you prefer to run Taiga without Docker, follow these steps:
+
+#### Prerequisites
+
+- Python 3.8+
+- PostgreSQL 12
+- RabbitMQ 3.8+
+- pip and virtualenv
+
+#### Setup
+
+1. **Create and activate a virtual environment**:
+
+   ```bash
+   python -m venv taiga-env
+   source taiga-env/bin/activate  # On Windows: taiga-env\Scripts\activate
+   ```
+
+2. **Install dependencies**:
+
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. **Set up PostgreSQL**:
+
+   Create a PostgreSQL database for Taiga:
+
+   ```bash
+   createuser taiga
+   createdb taiga -O taiga
+   ```
+
+   Set a password for the taiga user:
+
+   ```bash
+   psql -c "ALTER USER taiga WITH PASSWORD 'taiga';"
+   ```
+
+4. **Configure Taiga**:
+
+   Create a configuration file by copying the example:
+
+   ```bash
+   cp settings/config.py.dev.example settings/config.py
+   ```
+
+   Edit the `settings/config.py` file to match your environment, particularly the database settings:
+
+   ```python
+   DATABASES = {
+       'default': {
+           'ENGINE': 'django.db.backends.postgresql',
+           'NAME': 'taiga',
+           'USER': 'taiga',
+           'PASSWORD': 'taiga',
+           'HOST': 'localhost',
+           'PORT': '5432',
+       }
+   }
+   ```
+
+   If you're using RabbitMQ for events and async tasks, configure the RabbitMQ settings:
+
+   ```python
+   EVENTS_PUSH_BACKEND = "taiga.events.backends.rabbitmq.EventsPushBackend"
+   EVENTS_PUSH_BACKEND_OPTIONS = {
+       "url": "amqp://taiga:taiga@localhost:5672/taiga"
+   }
+
+   CELERY_ENABLED = True
+   CELERY_BROKER_URL = "amqp://taiga:taiga@localhost:5672/taiga"
+   ```
+
+5. **Initialize the database**:
+
+   ```bash
+   python manage.py migrate
+   python manage.py loaddata initial_user
+   python manage.py loaddata initial_project_templates
+   python manage.py compilemessages
+   python manage.py collectstatic --noinput
+   ```
+
+6. **Create a superuser (admin)**:
+
+   ```bash
+   python manage.py createsuperuser
+   ```
+
+7. **Run the development server**:
+
+   ```bash
+   python manage.py runserver
+   ```
+
+   The Taiga API will be available at http://localhost:8000/api/v1/
+
+8. **For production environments**:
+
+   For production use, you should:
+   - Use a proper WSGI server like Gunicorn
+   - Set up a reverse proxy with Nginx
+   - Configure SSL
+   - Set DEBUG=False in your settings
+
+   Example with Gunicorn:
+   ```bash
+   pip install gunicorn
+   gunicorn --workers=4 --timeout=60 --log-level=info --access-logfile=- --error-logfile=- taiga.wsgi
+   ```
+
+#### Running Celery (for async tasks)
+
+If you've enabled Celery for asynchronous tasks, you'll need to run the Celery worker:
+
+```bash
+celery -A taiga worker -l info
+```
+
 ## Bug reports
 
 If you **find a bug** in Taiga you can always report it:

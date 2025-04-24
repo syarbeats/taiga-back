@@ -22,3 +22,5 @@ static
 .direnv
 settings/config.py
 celerybeat-schedule
+taiga-env
+taiga-env-backend

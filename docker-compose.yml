@@ -17,6 +17,8 @@ services:
       - TAIGA_SITES_DOMAIN=localhost:8000
       - RABBITMQ_USER=taiga
       - RABBITMQ_PASS=taiga
+      - TAIGA_EVENTS_RABBITMQ_HOST=taiga-rabbitmq
+      - TAIGA_ASYNC_RABBITMQ_HOST=taiga-rabbitmq
       - DEBUG=True
     depends_on:
       - taiga-db
